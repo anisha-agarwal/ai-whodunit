@@ -1,0 +1,196 @@
+{
+  "preset": "ai-whodunit",
+  "version": 3,
+  "description": "AI Whodunit — Turborepo + pnpm + TypeScript. Evidence-gated pipeline enforcing 100% coverage on deterministic code, real-DB integration, and no hallucinating tests.",
+  "base_ref": "main",
+  "models": {
+    "fix": "sonnet",
+    "code": "sonnet",
+    "code_review": "opus",
+    "create_pr": "sonnet"
+  },
+  "pipelines": {
+    "engine": {
+      "steps": [
+        "code",
+        "format",
+        "lint",
+        "typecheck",
+        "test",
+        "code_review",
+        "report",
+        "create_pr"
+      ],
+      "dependencies": {
+        "format": ["code"],
+        "lint": ["format"],
+        "typecheck": ["format"],
+        "test": ["format"],
+        "code_review": ["lint", "typecheck", "test"],
+        "report": ["code_review"],
+        "create_pr": ["report"]
+      }
+    },
+    "full": {
+      "steps": [
+        "code",
+        "format",
+        "lint",
+        "typecheck",
+        "test",
+        "test_integration",
+        "test_contract",
+        "test_e2e",
+        "test_smoke",
+        "test_visual",
+        "code_review",
+        "report",
+        "create_pr"
+      ],
+      "dependencies": {
+        "format": ["code"],
+        "lint": ["format"],
+        "typecheck": ["format"],
+        "test": ["format"],
+        "test_integration": ["format"],
+        "test_contract": ["format"],
+        "test_e2e": ["test", "test_integration", "test_contract"],
+        "test_smoke": ["test_e2e"],
+        "test_visual": ["test_e2e"],
+        "code_review": [
+          "lint",
+          "typecheck",
+          "test",
+          "test_integration",
+          "test_contract",
+          "test_e2e",
+          "test_smoke",
+          "test_visual"
+        ],
+        "report": ["code_review"],
+        "create_pr": ["report"]
+      }
+    }
+  },
+  "steps": {
+    "code": {
+      "type": "ai",
+      "description": "Implement the planned changes with their full test suite",
+      "skill": "skills/code.md",
+      "timeout": 5400
+    },
+    "format": {
+      "type": "command",
+      "description": "Auto-format with Prettier",
+      "run_command": "pnpm format",
+      "error_file": "format-errors.txt",
+      "fix_hints": "Run 'pnpm format' to auto-fix formatting.",
+      "timeout": 180,
+      "parallel": true
+    },
+    "lint": {
+      "type": "command",
+      "description": "ESLint with zero tolerance for warnings",
+      "run_command": "pnpm lint",
+      "error_file": "lint-errors.txt",
+      "fix_hints": "Fix all ESLint errors AND warnings (CI runs with --max-warnings 0). Do not disable rules to pass; fix the code.",
+      "timeout": 300,
+      "parallel": true
+    },
+    "typecheck": {
+      "type": "command",
+      "description": "TypeScript strict typecheck",
+      "run_command": "pnpm typecheck",
+      "error_file": "typecheck-errors.txt",
+      "fix_hints": "Fix all type errors. tsconfig is strict (noUncheckedIndexedAccess, exactOptionalPropertyTypes). Do not use 'any' or '@ts-ignore' to silence errors.",
+      "timeout": 300,
+      "parallel": true
+    },
+    "test": {
+      "type": "command",
+      "description": "Vitest unit tests with 100% coverage gate on deterministic packages",
+      "run_command": "pnpm test",
+      "error_file": "test-errors.txt",
+      "fix_hints": "All unit tests must pass AND coverage must be 100% (line+branch) on deterministic packages. Coverage thresholds are configured in each package's vitest config and the command fails below them. Add REAL tests that exercise the implementation — never assert on mocks written to pass, never lower a threshold, never add coverage-ignore comments to dodge the gate.",
+      "timeout": 900,
+      "parallel": true
+    },
+    "test_integration": {
+      "type": "command",
+      "description": "DB integration tests against a real Postgres",
+      "run_command": "pnpm test:integration",
+      "error_file": "integration-errors.txt",
+      "fix_hints": "Integration tests run against a REAL Postgres (never a mocked DB). Ensure migrations apply and assertions check real persisted state.",
+      "timeout": 900,
+      "parallel": false
+    },
+    "test_contract": {
+      "type": "command",
+      "description": "API/contract tests incl. the server-authoritative payload scan",
+      "run_command": "pnpm test:contract",
+      "error_file": "contract-errors.txt",
+      "fix_hints": "Contract tests assert tRPC/SSE behavior against a real test DB, including the invariant that NO client-bound payload contains any dossier field, secret, or isGuilty. LLM behavior uses recorded-fixture replay, not exact-string asserts.",
+      "timeout": 900,
+      "parallel": false
+    },
+    "test_e2e": {
+      "type": "command",
+      "description": "Playwright end-to-end the full play flow",
+      "run_command": "pnpm test:e2e",
+      "error_file": "e2e-errors.txt",
+      "fix_hints": "Drive the real app in a real browser through the full play flow. Do not stub the UI.",
+      "timeout": 1800,
+      "parallel": false
+    },
+    "test_smoke": {
+      "type": "command",
+      "description": "Smoke — every route loads without error",
+      "run_command": "pnpm test:smoke",
+      "error_file": "smoke-errors.txt",
+      "fix_hints": "Every route must load without console/network error.",
+      "timeout": 600,
+      "parallel": false
+    },
+    "test_visual": {
+      "type": "command",
+      "description": "Playwright visual-regression baselines",
+      "run_command": "pnpm test:visual",
+      "error_file": "visual-errors.txt",
+      "fix_hints": "Screenshot baselines for board, interrogation, accusation, paywall. Only update baselines when the visual change is intended.",
+      "timeout": 1200,
+      "parallel": false
+    },
+    "code_review": {
+      "type": "ai",
+      "description": "Adversarial review for correctness, the grounding invariant, and test honesty",
+      "skill": "skills/code-review.md",
+      "subagent_type": "general-purpose",
+      "two_phase": true,
+      "timeout": 900,
+      "evidence": [
+        {
+          "rule": "file_exists",
+          "file_glob": "code-review-verdict.json",
+          "min_file_size": 10
+        }
+      ]
+    },
+    "report": {
+      "type": "inline",
+      "description": "Generate pipeline report"
+    },
+    "create_pr": {
+      "type": "ai",
+      "description": "Open a pull request",
+      "skill": "skills/create-pr.md",
+      "timeout": 300,
+      "evidence": [
+        {
+          "rule": "file_exists",
+          "file_glob": "pr-url.txt",
+          "min_file_size": 5
+        }
+      ]
+    }
+  }
+}
