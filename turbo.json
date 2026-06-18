@@ -13,6 +13,10 @@
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
     },
+    "test:mutation": {
+      "dependsOn": ["^build"],
+      "outputs": ["reports/mutation/**"]
+    },
     "test:integration": {
       "dependsOn": ["^build"]
     },

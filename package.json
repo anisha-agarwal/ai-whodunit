@@ -12,6 +12,7 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:mutation": "turbo run test:mutation",
     "test:integration": "turbo run test:integration",
     "test:contract": "turbo run test:contract",
     "test:e2e": "turbo run test:e2e",
