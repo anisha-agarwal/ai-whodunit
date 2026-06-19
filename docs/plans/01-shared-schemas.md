@@ -17,22 +17,22 @@ This document is the judged merge of two refined designs. The spine is **refined
 are grafted where they strictly improve correctness without compromising A's clean redaction story.
 Every graft and every rejection is called out so the delta is auditable.
 
-| Source | Adopted | Why |
-|--------|---------|-----|
-| **A (spine)** | Stable `CaseIssueCode` enum per refinement | Directly serves `code.md`/`test-author.md`: tests assert the *specific* code, not bare `success===false` — this is what kills code-swap mutants. Highest-value testing affordance in either design. |
-| **A** | Separate `VictimId` / `SuspectId` brands | Already resolves critique-B's **F4** at compile time: `Accusation.accusedSuspectId: SuspectId` structurally cannot hold a `VictimId` → "victim can't be accused" is a *type* guarantee, not a runtime hope. |
-| **A** | `victim` as a single declared object + `weapons[]`/`locations[]`/`timeline[]`/`suspects[]`/`clues[]` catalogs; integrity at `CaseFile.superRefine` | Cleanest "finite evidentiary core." `suspects[]` **are** the dossiers → no separate cast registry → the dossier↔suspect bijection critique-B's **F2** wanted is structural, not a refinement. |
-| **A** | Free-string facts in `knownFacts`/`knows`/`doesNotKnow`/`secret.fact`/`alibi.truth`; `ifLeaked` as prose | Keeps the headline **redaction** clean (no shared fact catalog that could leak secret-fact *statements* to the client). Honors the issue's literal field shapes. |
-| **A** | `PublicDossier`/`PublicClue`/`PublicCaseFile` via **explicit field construction** + denylist **and** allowlist scan; `role`+`reliability` redacted | A's refined design already fixed critique-A's CRITICAL C1/C2 leaks. This is the package's headline deliverable; keep it intact. |
-| **B (graft)** | **Three-tier knowledge semantics** (Decision 8) | Resolves critique-B's **F3** ambiguity. Operates on A's string facts → pure win, zero redaction cost. Drives R8/R9 below. |
-| **B (graft)** | **`validateAccusation(caseFile, acc)`** pure helper + `caseId` on `Accusation` (F9) | Well-formedness-of-an-accusation-against-a-case is deterministic, pure, and useful to engine/api. Explicitly **not** scoring (that stays in engine). |
-| **B (graft)** | **Culprit-alibi-breakable** solvability precondition (B's R10) | Cheap (`breaksWhen` already exists), catches a degenerate unsolvable class structurally. Kept as *necessary-but-not-sufficient*; full solvability proof stays in engine. |
-| **B (graft)** | **`PersonId = SuspectId ∪ VictimId`** union brand for `relationship.to` | Lets a suspect relate to the **victim** (motive!) while keeping victim/suspect distinct. Honest resolution of the F4 boundary without collapsing the brand split. |
-| **B (graft)** | Step-0 **zod-v4 API probe** (F7); explicit-key-inclusion under EOPT (F8) | Both are real implementation hazards under the strict base tsconfig; surfaced as coder obligations. |
-| **B — REJECTED** | Global `FactId` registry (`facts[]` catalog) | Credited but rejected: it would force every **secret-fact statement** into a shared catalog that `PublicCaseFile` must then filter, muddying the package's core redaction guarantee and expanding scope. Grounding-by-fact-identity at runtime is `engine`/`api`'s job; `shared` enforces the *structural* knowledge preconditions (R7–R9) on strings. |
-| **B — REJECTED** | Structured `Consequence` object for `ifLeaked` + clue-reaches-culprit reachability (B's R11) | `ifLeaked` stays prose per the issue's literal `secrets[]{fact,leakTrigger,ifLeaked}`. R11 reachability is not decidable in `shared` without structuring `ifLeaked`; that boundary belongs to engine. Noted as a deliberate deferral. |
+| Source           | Adopted                                                                                                                                            | Why                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **A (spine)**    | Stable `CaseIssueCode` enum per refinement                                                                                                         | Directly serves `code.md`/`test-author.md`: tests assert the _specific_ code, not bare `success===false` — this is what kills code-swap mutants. Highest-value testing affordance in either design.                                                                                                                                                    |
+| **A**            | Separate `VictimId` / `SuspectId` brands                                                                                                           | Already resolves critique-B's **F4** at compile time: `Accusation.accusedSuspectId: SuspectId` structurally cannot hold a `VictimId` → "victim can't be accused" is a _type_ guarantee, not a runtime hope.                                                                                                                                            |
+| **A**            | `victim` as a single declared object + `weapons[]`/`locations[]`/`timeline[]`/`suspects[]`/`clues[]` catalogs; integrity at `CaseFile.superRefine` | Cleanest "finite evidentiary core." `suspects[]` **are** the dossiers → no separate cast registry → the dossier↔suspect bijection critique-B's **F2** wanted is structural, not a refinement.                                                                                                                                                          |
+| **A**            | Free-string facts in `knownFacts`/`knows`/`doesNotKnow`/`secret.fact`/`alibi.truth`; `ifLeaked` as prose                                           | Keeps the headline **redaction** clean (no shared fact catalog that could leak secret-fact _statements_ to the client). Honors the issue's literal field shapes.                                                                                                                                                                                       |
+| **A**            | `PublicDossier`/`PublicClue`/`PublicCaseFile` via **explicit field construction** + denylist **and** allowlist scan; `role`+`reliability` redacted | A's refined design already fixed critique-A's CRITICAL C1/C2 leaks. This is the package's headline deliverable; keep it intact.                                                                                                                                                                                                                        |
+| **B (graft)**    | **Three-tier knowledge semantics** (Decision 8)                                                                                                    | Resolves critique-B's **F3** ambiguity. Operates on A's string facts → pure win, zero redaction cost. Drives R8/R9 below.                                                                                                                                                                                                                              |
+| **B (graft)**    | **`validateAccusation(caseFile, acc)`** pure helper + `caseId` on `Accusation` (F9)                                                                | Well-formedness-of-an-accusation-against-a-case is deterministic, pure, and useful to engine/api. Explicitly **not** scoring (that stays in engine).                                                                                                                                                                                                   |
+| **B (graft)**    | **Culprit-alibi-breakable** solvability precondition (B's R10)                                                                                     | Cheap (`breaksWhen` already exists), catches a degenerate unsolvable class structurally. Kept as _necessary-but-not-sufficient_; full solvability proof stays in engine.                                                                                                                                                                               |
+| **B (graft)**    | **`PersonId = SuspectId ∪ VictimId`** union brand for `relationship.to`                                                                            | Lets a suspect relate to the **victim** (motive!) while keeping victim/suspect distinct. Honest resolution of the F4 boundary without collapsing the brand split.                                                                                                                                                                                      |
+| **B (graft)**    | Step-0 **zod-v4 API probe** (F7); explicit-key-inclusion under EOPT (F8)                                                                           | Both are real implementation hazards under the strict base tsconfig; surfaced as coder obligations.                                                                                                                                                                                                                                                    |
+| **B — REJECTED** | Global `FactId` registry (`facts[]` catalog)                                                                                                       | Credited but rejected: it would force every **secret-fact statement** into a shared catalog that `PublicCaseFile` must then filter, muddying the package's core redaction guarantee and expanding scope. Grounding-by-fact-identity at runtime is `engine`/`api`'s job; `shared` enforces the _structural_ knowledge preconditions (R7–R9) on strings. |
+| **B — REJECTED** | Structured `Consequence` object for `ifLeaked` + clue-reaches-culprit reachability (B's R11)                                                       | `ifLeaked` stays prose per the issue's literal `secrets[]{fact,leakTrigger,ifLeaked}`. R11 reachability is not decidable in `shared` without structuring `ifLeaked`; that boundary belongs to engine. Noted as a deliberate deferral.                                                                                                                  |
 
-**Ownership note (README split-brain).** README lists a "Zod dossier schema" under *both* `engine`
+**Ownership note (README split-brain).** README lists a "Zod dossier schema" under _both_ `engine`
 and `shared`. **Issue #1 is authoritative: `shared` owns all schemas; `engine` imports them** and
 adds the generator + deterministic solver. `engine` MUST NOT redeclare these shapes.
 
@@ -49,14 +49,14 @@ are dangling strings nothing can validate. This is the "finite evidentiary core,
 These are the binding architectural choices for the package — the six questions `spec-gaps.md`
 left to the architect, each resolved here with its rationale. Sections 1–10 implement them.
 
-| # | Open question | **Decision** | Why |
-|---|---------------|--------------|-----|
-| 1 | **Reference strategy** | **Branded string IDs** (`z.string().min(1).brand<'SuspectId'>()`, etc.). Leaf schemas validate *shape only*; **referential integrity is enforced on the `CaseFile` envelope** via `.superRefine` (§4), never on a lone leaf. `VictimId`/`SuspectId` stay distinct brands; `PersonId = SuspectId ∪ VictimId` is used only for `relationship.to`. | Leaf schemas stay composable + independently parseable; integrity needs the whole closed world in scope. Brands stop cross-type id confusion at compile time, and the `Victim`/`Suspect` split makes "the victim can't be accused" a *type* guarantee (`Accusation.accusedSuspectId: SuspectId`). |
-| 2 | **`time` representation** | A declared, **ordered `TimeSlot[]` timeline** on the `CaseFile`; every temporal field is a `TimeSlotId` resolving into it, with an integer `order` whose values are unique (R15). | A finite evidentiary core needs a closed, enumerable, totally-ordered slot set so alibi/clue-timeline checks are decidable integer comparisons — not date math or NLP. |
-| 3 | **`relationships` shape** | Per-dossier **array of typed directed edges** `{ to: PersonId, kind: RelationshipKind, descriptor }`. Envelope refinement: `to` resolves to a suspect or the victim, and no self-edge (R10). Symmetry is **not** required. | Directed edges model asymmetric relationships (resentment, debt) honestly; a map keyed by id loses the kind taxonomy; free text is uncheckable. |
-| 4 | **`leakTrigger` / `breaksWhen` typing** | A structured **`Trigger` discriminated union** (`clue-presented` carrying a cross-checked `ClueId`; `fact-confronted` carrying opaque prose `shared` does not cross-check; `contradiction-exposed`). **`ifLeaked` and `alibi.truth` stay prose** (issue-literal), **not** structured. | The machine-evaluable part (does clue X exist?) must be cross-checkable by the engine; the consequence/whereabouts text stays human prose. Structuring `ifLeaked` would pull clue→culprit reachability into `shared`, which belongs to engine. |
-| 5 | **Cross-cutting refinements** | Enumerated explicitly in §4 (R1a–R16 + A1a–A1e), each carrying a stable `CaseIssueCode`, each a coverage obligation **and** a mutation-probe target. | Makes the contract auditable and the 100% test matrix mechanical: tests assert the *specific* code, which is what kills code-swap mutants. |
-| 6 | **Server-authoritative boundary** | `shared` exports **both** the full schemas **and** a derived client-safe projection (`PublicDossier`/`PublicClue`/`PublicCaseFile`) plus pure `redactDossier`/`redactClue`/`toPublicCaseFile` built by **explicit field construction** (§5). `role` and `reliability` are redacted alongside `secrets`/`alibi`/`knowledge`/`isGuilty`/`solution`. | `apps/web` imports `shared`; giving it a typed public projection makes leakage a *type* error and gives one source of truth for "what is safe to send." Explicit construction (not Zod-strip) leaves real logic for Stryker to mutate. |
+| #   | Open question                           | **Decision**                                                                                                                                                                                                                                                                                                                                      | Why                                                                                                                                                                                                                                                                                               |
+| --- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Reference strategy**                  | **Branded string IDs** (`z.string().min(1).brand<'SuspectId'>()`, etc.). Leaf schemas validate _shape only_; **referential integrity is enforced on the `CaseFile` envelope** via `.superRefine` (§4), never on a lone leaf. `VictimId`/`SuspectId` stay distinct brands; `PersonId = SuspectId ∪ VictimId` is used only for `relationship.to`.   | Leaf schemas stay composable + independently parseable; integrity needs the whole closed world in scope. Brands stop cross-type id confusion at compile time, and the `Victim`/`Suspect` split makes "the victim can't be accused" a _type_ guarantee (`Accusation.accusedSuspectId: SuspectId`). |
+| 2   | **`time` representation**               | A declared, **ordered `TimeSlot[]` timeline** on the `CaseFile`; every temporal field is a `TimeSlotId` resolving into it, with an integer `order` whose values are unique (R15).                                                                                                                                                                 | A finite evidentiary core needs a closed, enumerable, totally-ordered slot set so alibi/clue-timeline checks are decidable integer comparisons — not date math or NLP.                                                                                                                            |
+| 3   | **`relationships` shape**               | Per-dossier **array of typed directed edges** `{ to: PersonId, kind: RelationshipKind, descriptor }`. Envelope refinement: `to` resolves to a suspect or the victim, and no self-edge (R10). Symmetry is **not** required.                                                                                                                        | Directed edges model asymmetric relationships (resentment, debt) honestly; a map keyed by id loses the kind taxonomy; free text is uncheckable.                                                                                                                                                   |
+| 4   | **`leakTrigger` / `breaksWhen` typing** | A structured **`Trigger` discriminated union** (`clue-presented` carrying a cross-checked `ClueId`; `fact-confronted` carrying opaque prose `shared` does not cross-check; `contradiction-exposed`). **`ifLeaked` and `alibi.truth` stay prose** (issue-literal), **not** structured.                                                             | The machine-evaluable part (does clue X exist?) must be cross-checkable by the engine; the consequence/whereabouts text stays human prose. Structuring `ifLeaked` would pull clue→culprit reachability into `shared`, which belongs to engine.                                                    |
+| 5   | **Cross-cutting refinements**           | Enumerated explicitly in §4 (R1a–R16 + A1a–A1e), each carrying a stable `CaseIssueCode`, each a coverage obligation **and** a mutation-probe target.                                                                                                                                                                                              | Makes the contract auditable and the 100% test matrix mechanical: tests assert the _specific_ code, which is what kills code-swap mutants.                                                                                                                                                        |
+| 6   | **Server-authoritative boundary**       | `shared` exports **both** the full schemas **and** a derived client-safe projection (`PublicDossier`/`PublicClue`/`PublicCaseFile`) plus pure `redactDossier`/`redactClue`/`toPublicCaseFile` built by **explicit field construction** (§5). `role` and `reliability` are redacted alongside `secrets`/`alibi`/`knowledge`/`isGuilty`/`solution`. | `apps/web` imports `shared`; giving it a typed public projection makes leakage a _type_ error and gives one source of truth for "what is safe to send." Explicit construction (not Zod-strip) leaves real logic for Stryker to mutate.                                                            |
 
 The §0 synthesis table above records which design each decision was drawn from and which
 alternatives were rejected (e.g. the global `FactId` registry and structured `Consequence`).
@@ -135,12 +135,12 @@ flowchart LR
 ### 2.1 Branded IDs (`ids.ts`)
 
 ```ts
-export const SuspectId  = z.string().min(1).brand<'SuspectId'>();
-export const VictimId   = z.string().min(1).brand<'VictimId'>();
-export const WeaponId   = z.string().min(1).brand<'WeaponId'>();
+export const SuspectId = z.string().min(1).brand<'SuspectId'>();
+export const VictimId = z.string().min(1).brand<'VictimId'>();
+export const WeaponId = z.string().min(1).brand<'WeaponId'>();
 export const LocationId = z.string().min(1).brand<'LocationId'>();
 export const TimeSlotId = z.string().min(1).brand<'TimeSlotId'>();
-export const ClueId     = z.string().min(1).brand<'ClueId'>();
+export const ClueId = z.string().min(1).brand<'ClueId'>();
 
 // PersonId = anyone in the cast (a suspect OR the victim) — for relationship targets.
 // Keeps SuspectId/VictimId distinct (Accusation cannot accuse the victim) while letting
@@ -155,7 +155,14 @@ export type SuspectId = z.infer<typeof SuspectId>; // …one inferred type per b
 ```ts
 export const Role = z.enum(['culprit', 'red-herring', 'witness']); // SERVER-ONLY truth
 export const RelationshipKind = z.enum([
-  'spouse','sibling','colleague','rival','friend','employer','creditor','stranger',
+  'spouse',
+  'sibling',
+  'colleague',
+  'rival',
+  'friend',
+  'employer',
+  'creditor',
+  'stranger',
 ]);
 export const ClueReliability = z.enum(['truthful', 'misleading']); // SERVER-ONLY — misleading ⇒ red herring
 ```
@@ -164,9 +171,9 @@ export const ClueReliability = z.enum(['truthful', 'misleading']); // SERVER-ONL
 
 ```ts
 export const Trigger = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('clue-presented'),       clueId: ClueId }), // cross-checked R11/R12
+  z.object({ kind: z.literal('clue-presented'), clueId: ClueId }), // cross-checked R11/R12
   // `fact` is opaque prose — shared does NOT cross-check it (no fact catalog by design). [A N3]
-  z.object({ kind: z.literal('fact-confronted'),      fact: z.string().min(1) }),
+  z.object({ kind: z.literal('fact-confronted'), fact: z.string().min(1) }),
   z.object({ kind: z.literal('contradiction-exposed') }),
 ]);
 ```
@@ -175,9 +182,9 @@ export const Trigger = z.discriminatedUnion('kind', [
 
 ```ts
 export const SolutionGraph = z.object({
-  victimId:   VictimId,
-  killerId:   SuspectId,
-  weaponId:   WeaponId,
+  victimId: VictimId,
+  killerId: SuspectId,
+  weaponId: WeaponId,
   locationId: LocationId,
   timeSlotId: TimeSlotId,
 });
@@ -188,44 +195,47 @@ export const SolutionGraph = z.object({
 **Three-tier knowledge model [graft: resolves critique-B F3].** For each suspect:
 `knowledge.knows` = the character's **full closed world** (every fact they could assert, incl.
 secret facts); `knownFacts ⊆ knows` = the **freely-offered** subset (volunteered without prompting);
-`secrets[].fact ∈ knows \ knownFacts` = facts the character will not offer freely but *can* reveal
+`secrets[].fact ∈ knows \ knownFacts` = facts the character will not offer freely but _can_ reveal
 under a trigger. The runtime grounding boundary (engine/api) is `knowledge.knows`.
 
 ```ts
 export const Secret = z.object({
-  fact:        z.string().min(1), // ∈ knows, ∉ knownFacts (enforced at envelope, R9)
-  leakTrigger: Trigger,           // SERVER-ONLY — when the suspect reveals it
-  ifLeaked:    z.string().min(1), // in-character consequence prose (issue-literal; NOT structured)
+  fact: z.string().min(1), // ∈ knows, ∉ knownFacts (enforced at envelope, R9)
+  leakTrigger: Trigger, // SERVER-ONLY — when the suspect reveals it
+  ifLeaked: z.string().min(1), // in-character consequence prose (issue-literal; NOT structured)
 });
 
-export const Alibi = z.object({
-  claim:      z.string().min(1), // public assertion (surfaces via api interrogation prose)
-  truth:      z.string().min(1), // SERVER-ONLY — the real whereabouts
-  // absent ⇒ unbreakable / true alibi (never `null` — exactOptionalPropertyTypes)
-  breaksWhen: Trigger,
-}).partial({ breaksWhen: true });
+export const Alibi = z
+  .object({
+    claim: z.string().min(1), // public assertion (surfaces via api interrogation prose)
+    truth: z.string().min(1), // SERVER-ONLY — the real whereabouts
+    // absent ⇒ unbreakable / true alibi (never `null` — exactOptionalPropertyTypes)
+    breaksWhen: Trigger,
+  })
+  .partial({ breaksWhen: true });
 
 export const Relationship = z.object({
-  to:         PersonId,            // a suspect OR the victim; resolved + no-self-edge at envelope (R10)
-  kind:       RelationshipKind,
+  to: PersonId, // a suspect OR the victim; resolved + no-self-edge at envelope (R10)
+  kind: RelationshipKind,
   descriptor: z.string().min(1),
 });
 
-export const Knowledge = z.object({ // SERVER-ONLY
-  knows:       z.array(z.string().min(1)), // full closed world (grounding boundary)
+export const Knowledge = z.object({
+  // SERVER-ONLY
+  knows: z.array(z.string().min(1)), // full closed world (grounding boundary)
   doesNotKnow: z.array(z.string().min(1)),
 });
 
 export const Dossier = z.object({
-  id:            SuspectId,
+  id: SuspectId,
   publicPersona: z.string().min(1),
-  knownFacts:    z.array(z.string().min(1)), // freely-offered subset of knows (R8)
-  secrets:       z.array(Secret),            // SERVER-ONLY
-  alibi:         Alibi,                      // .truth SERVER-ONLY
+  knownFacts: z.array(z.string().min(1)), // freely-offered subset of knows (R8)
+  secrets: z.array(Secret), // SERVER-ONLY
+  alibi: Alibi, // .truth SERVER-ONLY
   relationships: z.array(Relationship),
-  knowledge:     Knowledge,                  // SERVER-ONLY
-  isGuilty:      z.boolean(),                // SERVER-ONLY
-  role:          Role,                       // SERVER-ONLY — culprit ⟺ isGuilty (R3)
+  knowledge: Knowledge, // SERVER-ONLY
+  isGuilty: z.boolean(), // SERVER-ONLY
+  role: Role, // SERVER-ONLY — culprit ⟺ isGuilty (R3)
 });
 ```
 
@@ -234,21 +244,24 @@ export const Dossier = z.object({
 ```ts
 // each ref field .optional(); the refersTo object itself .optional(); NO .partial() [critique-A N1]
 export const Clue = z.object({
-  id:          ClueId,
-  statement:   z.string().min(1),
-  reliability: ClueReliability,            // SERVER-ONLY — omitted in PublicClue
-  refersTo: z.object({
-    suspectId:  SuspectId.optional(),
-    weaponId:   WeaponId.optional(),
-    locationId: LocationId.optional(),
-    timeSlotId: TimeSlotId.optional(),
-  }).optional(),
+  id: ClueId,
+  statement: z.string().min(1),
+  reliability: ClueReliability, // SERVER-ONLY — omitted in PublicClue
+  refersTo: z
+    .object({
+      suspectId: SuspectId.optional(),
+      weaponId: WeaponId.optional(),
+      locationId: LocationId.optional(),
+      timeSlotId: TimeSlotId.optional(),
+    })
+    .optional(),
 });
 
-export const Accusation = z.object({       // player's guess — shape only; correctness is engine's
-  caseId:           z.string().min(1),     // binds the accusation to a case (validateAccusation, A1) [graft B F9]
-  accusedSuspectId: SuspectId,             // brand makes accusing the VictimId a compile error [A]
-  weaponId:   WeaponId.optional(),
+export const Accusation = z.object({
+  // player's guess — shape only; correctness is engine's
+  caseId: z.string().min(1), // binds the accusation to a case (validateAccusation, A1) [graft B F9]
+  accusedSuspectId: SuspectId, // brand makes accusing the VictimId a compile error [A]
+  weaponId: WeaponId.optional(),
   locationId: LocationId.optional(),
   timeSlotId: TimeSlotId.optional(),
 });
@@ -257,21 +270,27 @@ export const Accusation = z.object({       // player's guess — shape only; cor
 ### 2.7 Catalogs + envelope (`case-file.ts`)
 
 ```ts
-export const Victim   = z.object({ id: VictimId,   name:  z.string().min(1) });
-export const Weapon   = z.object({ id: WeaponId,   label: z.string().min(1) });
+export const Victim = z.object({ id: VictimId, name: z.string().min(1) });
+export const Weapon = z.object({ id: WeaponId, label: z.string().min(1) });
 export const Location = z.object({ id: LocationId, label: z.string().min(1) });
-export const TimeSlot = z.object({ id: TimeSlotId, label: z.string().min(1), order: z.number().int().nonnegative() });
+export const TimeSlot = z.object({
+  id: TimeSlotId,
+  label: z.string().min(1),
+  order: z.number().int().nonnegative(),
+});
 
-export const CaseFile = z.object({
-  id:        z.string().min(1),
-  victim:    Victim,
-  weapons:   z.array(Weapon).nonempty(),
-  locations: z.array(Location).nonempty(),
-  timeline:  z.array(TimeSlot).nonempty(),
-  suspects:  z.array(Dossier).nonempty(),   // suspects ARE dossiers → bijection is structural [resolves B F2]
-  clues:     z.array(Clue),
-  solution:  SolutionGraph,
-}).superRefine(checkCaseInvariants);        // §4 — all cross-entity refinements live here
+export const CaseFile = z
+  .object({
+    id: z.string().min(1),
+    victim: Victim,
+    weapons: z.array(Weapon).nonempty(),
+    locations: z.array(Location).nonempty(),
+    timeline: z.array(TimeSlot).nonempty(),
+    suspects: z.array(Dossier).nonempty(), // suspects ARE dossiers → bijection is structural [resolves B F2]
+    clues: z.array(Clue),
+    solution: SolutionGraph,
+  })
+  .superRefine(checkCaseInvariants); // §4 — all cross-entity refinements live here
 ```
 
 ### 2.8 Public projection + accusation validator (`redaction.ts`, `accusation.ts`)
@@ -279,27 +298,35 @@ export const CaseFile = z.object({
 ```ts
 // PublicDossier: no secrets, no alibi (incl. .claim), no knowledge, no isGuilty, no role
 export const PublicDossier = z.object({
-  id:            SuspectId,
+  id: SuspectId,
   publicPersona: z.string().min(1),
-  knownFacts:    z.array(z.string().min(1)),
+  knownFacts: z.array(z.string().min(1)),
   relationships: z.array(Relationship),
 });
 
-export const PublicClue = z.object({ // no reliability
-  id:        ClueId,
+export const PublicClue = z.object({
+  // no reliability
+  id: ClueId,
   statement: z.string().min(1),
-  refersTo: z.object({
-    suspectId:  SuspectId.optional(),
-    weaponId:   WeaponId.optional(),
-    locationId: LocationId.optional(),
-    timeSlotId: TimeSlotId.optional(),
-  }).optional(),
+  refersTo: z
+    .object({
+      suspectId: SuspectId.optional(),
+      weaponId: WeaponId.optional(),
+      locationId: LocationId.optional(),
+      timeSlotId: TimeSlotId.optional(),
+    })
+    .optional(),
 });
 
-export const PublicCaseFile = z.object({ // no solution
-  id: z.string().min(1), victim: Victim,
-  weapons: z.array(Weapon), locations: z.array(Location), timeline: z.array(TimeSlot),
-  suspects: z.array(PublicDossier), clues: z.array(PublicClue),
+export const PublicCaseFile = z.object({
+  // no solution
+  id: z.string().min(1),
+  victim: Victim,
+  weapons: z.array(Weapon),
+  locations: z.array(Location),
+  timeline: z.array(TimeSlot),
+  suspects: z.array(PublicDossier),
+  clues: z.array(PublicClue),
 });
 
 // All three pure; built by EXPLICIT field construction (not Zod-strip / delete) so Stryker
@@ -309,7 +336,10 @@ export function redactClue(c: Clue): PublicClue;
 export function toPublicCaseFile(cf: CaseFile): PublicCaseFile;
 
 // Well-formedness of an accusation AGAINST a case — NOT scoring/correctness. [graft B]
-export interface AccusationValidity { ok: boolean; issues: CaseIssueCode[]; }
+export interface AccusationValidity {
+  ok: boolean;
+  issues: CaseIssueCode[];
+}
 export function validateAccusation(cf: CaseFile, acc: Accusation): AccusationValidity;
 ```
 
@@ -318,9 +348,10 @@ export function validateAccusation(cf: CaseFile, acc: Accusation): AccusationVal
 ## 3. Deliverable 3 — exact file list under `packages/shared`
 
 > **Ownership (per `code.md` + `skills/code.md`):** the **coder** writes all `src/*.ts` production
-> + `package.json`/`tsconfig*`/`eslint.config.js` scaffold + `coverage-handoff.md`, and writes
-> **zero tests**. The **test_author** owns every `*.test.ts`/`*.test-d.ts`, the `tests/` tree, the
-> **threshold-bearing configs** (`vitest.config.ts`, `stryker.conf.json`), and `mutation-ledger.md`.
+>
+> - `package.json`/`tsconfig*`/`eslint.config.js` scaffold + `coverage-handoff.md`, and writes
+>   **zero tests**. The **test_author** owns every `*.test.ts`/`*.test-d.ts`, the `tests/` tree, the
+>   **threshold-bearing configs** (`vitest.config.ts`, `stryker.conf.json`), and `mutation-ledger.md`.
 
 ```
 packages/shared/
@@ -373,60 +404,60 @@ Zod issue carrying a stable `CaseIssueCode` (in `errors.ts`). Each row is a **co
 (pass-arm silent + fail-arm fires) **and** a **mutation-probe target**.
 
 **Branch-structuring rule (`code.md`: "an unreachable line means the design is wrong").** Every
-helper is written *collect violations → if (any) ctx.addIssue* so both arms are reachable. Compound
+helper is written _collect violations → if (any) ctx.addIssue_ so both arms are reachable. Compound
 checks (R5, R6, R10, R13) are **data-driven loops** so the all-present/pass arm and each
 one-missing/fail arm are independently reachable. No defensive guards over values Zod already narrowed.
 
-| # | `CaseIssueCode` | Invariant | Fail-arm fixture(s) — one mutation from valid |
-|---|-----------------|-----------|-----------------------------------------------|
-| R1a | `DUP_SUSPECT_ID` | `suspects[].id` unique | duplicate a suspect id |
-| R1b | `DUP_WEAPON_ID` | `weapons[].id` unique | duplicate a weapon id |
-| R1c | `DUP_LOCATION_ID` | `locations[].id` unique | duplicate a location id |
-| R1d | `DUP_TIMESLOT_ID` | `timeline[].id` unique | duplicate a timeslot id |
-| R1e | `DUP_CLUE_ID` | `clues[].id` unique | duplicate a clue id |
-| R2 | `EXACTLY_ONE_CULPRIT` | exactly one suspect with `role==='culprit'` | (a) zero culprits; (b) two culprits |
-| R3 | `GUILT_ROLE_COHERENT` | `isGuilty===true` ⟺ `role==='culprit'`, every suspect | (a) guilty witness; (b) non-guilty culprit |
-| R4 | `VICTIM_NOT_SUSPECT` | `victim.id` is not also a `suspects[].id` | victim id collides with a suspect id |
-| R5a | `KILLER_RESOLVES` | `solution.killerId` is a known suspect id | killerId not in `suspects[]` |
-| R5b | `KILLER_IS_CULPRIT` | that suspect has `role==='culprit'` | killerId resolves to a red-herring |
-| R6a | `SOLUTION_VICTIM_MATCHES` | `solution.victimId === victim.id` (equality, not `.some`) [A N4] | victimId differs from `victim.id` |
-| R6b | `SOLUTION_WEAPON_RESOLVES` | `solution.weaponId ∈ weapons[].id` | weaponId not in `weapons[]` |
-| R6c | `SOLUTION_LOCATION_RESOLVES` | `solution.locationId ∈ locations[].id` | locationId not in `locations[]` |
-| R6d | `SOLUTION_TIMESLOT_RESOLVES` | `solution.timeSlotId ∈ timeline[].id` | timeSlotId not in `timeline[]` |
-| R7 | `KNOWLEDGE_DISJOINT` | per dossier, `knows ∩ doesNotKnow === ∅` | same fact in both lists |
-| R8 | `KNOWN_FACTS_SUBSET` | per dossier, `knownFacts ⊆ knows` [three-tier] | a `knownFacts` entry not in `knows` |
-| R9 | `SECRET_FACT_COHERENT` | per secret, `fact ∈ knows ∧ fact ∉ knownFacts` [three-tier] | (a) secret fact not in `knows`; (b) secret fact also in `knownFacts` |
-| R10a | `RELATIONSHIP_TARGET_RESOLVES` | every `relationships[].to` ∈ `suspects[].id ∪ {victim.id}` | edge to unknown person id |
-| R10b | `RELATIONSHIP_NO_SELF_EDGE` | `to !== owning suspect's id` | self-edge |
-| R11 | `SECRET_TRIGGER_RESOLVES` | every `clue-presented` `leakTrigger.clueId ∈ clues[]` | trigger → unknown clueId |
-| R12 | `ALIBI_TRIGGER_RESOLVES` | `alibi.breaksWhen` (when present, `clue-presented`) `clueId ∈ clues[]` | breaksWhen → unknown clueId |
-| R13a | `CLUE_REFS_SUSPECT_RESOLVES` | `clue.refersTo.suspectId` (present) ∈ `suspects[].id` | refers to unknown suspectId |
-| R13b | `CLUE_REFS_WEAPON_RESOLVES` | `clue.refersTo.weaponId` (present) ∈ `weapons[].id` | refers to unknown weaponId |
-| R13c | `CLUE_REFS_LOCATION_RESOLVES` | `clue.refersTo.locationId` (present) ∈ `locations[].id` | refers to unknown locationId |
-| R13d | `CLUE_REFS_TIMESLOT_RESOLVES` | `clue.refersTo.timeSlotId` (present) ∈ `timeline[].id` | refers to unknown timeSlotId |
-| R14 | `WITNESS_OR_HERRING_PRESENT` | ≥1 non-culprit suspect (a one-suspect case is unsolvable) | single-suspect case |
-| R15 | `TIMESLOT_ORDER_UNIQUE` | `timeline[].order` values all distinct (so engine can sort) [critique-A M4] | two timeslots share an `order` |
-| R16 | `CULPRIT_ALIBI_BREAKABLE` | the culprit's `alibi.breaksWhen` is **present** (the lie must be breakable) [graft B R10] | culprit alibi has no `breaksWhen` |
+| #    | `CaseIssueCode`                | Invariant                                                                                 | Fail-arm fixture(s) — one mutation from valid                        |
+| ---- | ------------------------------ | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| R1a  | `DUP_SUSPECT_ID`               | `suspects[].id` unique                                                                    | duplicate a suspect id                                               |
+| R1b  | `DUP_WEAPON_ID`                | `weapons[].id` unique                                                                     | duplicate a weapon id                                                |
+| R1c  | `DUP_LOCATION_ID`              | `locations[].id` unique                                                                   | duplicate a location id                                              |
+| R1d  | `DUP_TIMESLOT_ID`              | `timeline[].id` unique                                                                    | duplicate a timeslot id                                              |
+| R1e  | `DUP_CLUE_ID`                  | `clues[].id` unique                                                                       | duplicate a clue id                                                  |
+| R2   | `EXACTLY_ONE_CULPRIT`          | exactly one suspect with `role==='culprit'`                                               | (a) zero culprits; (b) two culprits                                  |
+| R3   | `GUILT_ROLE_COHERENT`          | `isGuilty===true` ⟺ `role==='culprit'`, every suspect                                     | (a) guilty witness; (b) non-guilty culprit                           |
+| R4   | `VICTIM_NOT_SUSPECT`           | `victim.id` is not also a `suspects[].id`                                                 | victim id collides with a suspect id                                 |
+| R5a  | `KILLER_RESOLVES`              | `solution.killerId` is a known suspect id                                                 | killerId not in `suspects[]`                                         |
+| R5b  | `KILLER_IS_CULPRIT`            | that suspect has `role==='culprit'`                                                       | killerId resolves to a red-herring                                   |
+| R6a  | `SOLUTION_VICTIM_MATCHES`      | `solution.victimId === victim.id` (equality, not `.some`) [A N4]                          | victimId differs from `victim.id`                                    |
+| R6b  | `SOLUTION_WEAPON_RESOLVES`     | `solution.weaponId ∈ weapons[].id`                                                        | weaponId not in `weapons[]`                                          |
+| R6c  | `SOLUTION_LOCATION_RESOLVES`   | `solution.locationId ∈ locations[].id`                                                    | locationId not in `locations[]`                                      |
+| R6d  | `SOLUTION_TIMESLOT_RESOLVES`   | `solution.timeSlotId ∈ timeline[].id`                                                     | timeSlotId not in `timeline[]`                                       |
+| R7   | `KNOWLEDGE_DISJOINT`           | per dossier, `knows ∩ doesNotKnow === ∅`                                                  | same fact in both lists                                              |
+| R8   | `KNOWN_FACTS_SUBSET`           | per dossier, `knownFacts ⊆ knows` [three-tier]                                            | a `knownFacts` entry not in `knows`                                  |
+| R9   | `SECRET_FACT_COHERENT`         | per secret, `fact ∈ knows ∧ fact ∉ knownFacts` [three-tier]                               | (a) secret fact not in `knows`; (b) secret fact also in `knownFacts` |
+| R10a | `RELATIONSHIP_TARGET_RESOLVES` | every `relationships[].to` ∈ `suspects[].id ∪ {victim.id}`                                | edge to unknown person id                                            |
+| R10b | `RELATIONSHIP_NO_SELF_EDGE`    | `to !== owning suspect's id`                                                              | self-edge                                                            |
+| R11  | `SECRET_TRIGGER_RESOLVES`      | every `clue-presented` `leakTrigger.clueId ∈ clues[]`                                     | trigger → unknown clueId                                             |
+| R12  | `ALIBI_TRIGGER_RESOLVES`       | `alibi.breaksWhen` (when present, `clue-presented`) `clueId ∈ clues[]`                    | breaksWhen → unknown clueId                                          |
+| R13a | `CLUE_REFS_SUSPECT_RESOLVES`   | `clue.refersTo.suspectId` (present) ∈ `suspects[].id`                                     | refers to unknown suspectId                                          |
+| R13b | `CLUE_REFS_WEAPON_RESOLVES`    | `clue.refersTo.weaponId` (present) ∈ `weapons[].id`                                       | refers to unknown weaponId                                           |
+| R13c | `CLUE_REFS_LOCATION_RESOLVES`  | `clue.refersTo.locationId` (present) ∈ `locations[].id`                                   | refers to unknown locationId                                         |
+| R13d | `CLUE_REFS_TIMESLOT_RESOLVES`  | `clue.refersTo.timeSlotId` (present) ∈ `timeline[].id`                                    | refers to unknown timeSlotId                                         |
+| R14  | `WITNESS_OR_HERRING_PRESENT`   | ≥1 non-culprit suspect (a one-suspect case is unsolvable)                                 | single-suspect case                                                  |
+| R15  | `TIMESLOT_ORDER_UNIQUE`        | `timeline[].order` values all distinct (so engine can sort) [critique-A M4]               | two timeslots share an `order`                                       |
+| R16  | `CULPRIT_ALIBI_BREAKABLE`      | the culprit's `alibi.breaksWhen` is **present** (the lie must be breakable) [graft B R10] | culprit alibi has no `breaksWhen`                                    |
 
 **`validateAccusation` (pure fn in `accusation.ts`, not a `superRefine`).** Returns
 `{ ok, issues: CaseIssueCode[] }` — **well-formedness against a case, never correctness/scoring**:
 
-| # | `CaseIssueCode` | Check |
-|---|-----------------|-------|
-| A1a | `ACCUSATION_CASE_MISMATCH` | `acc.caseId === cf.id` [graft B F9] |
-| A1b | `ACCUSED_NOT_SUSPECT` | `acc.accusedSuspectId ∈ cf.suspects[].id` |
-| A1c | `ACCUSED_WEAPON_RESOLVES` | `acc.weaponId` (present) ∈ `cf.weapons[].id` |
+| #   | `CaseIssueCode`             | Check                                            |
+| --- | --------------------------- | ------------------------------------------------ |
+| A1a | `ACCUSATION_CASE_MISMATCH`  | `acc.caseId === cf.id` [graft B F9]              |
+| A1b | `ACCUSED_NOT_SUSPECT`       | `acc.accusedSuspectId ∈ cf.suspects[].id`        |
+| A1c | `ACCUSED_WEAPON_RESOLVES`   | `acc.weaponId` (present) ∈ `cf.weapons[].id`     |
 | A1d | `ACCUSED_LOCATION_RESOLVES` | `acc.locationId` (present) ∈ `cf.locations[].id` |
-| A1e | `ACCUSED_TIMESLOT_RESOLVES` | `acc.timeSlotId` (present) ∈ `cf.timeline[].id` |
+| A1e | `ACCUSED_TIMESLOT_RESOLVES` | `acc.timeSlotId` (present) ∈ `cf.timeline[].id`  |
 
 > **`Accusation` scope (state explicitly so the test-author doesn't invent it).** Whether an
-> accusation is *correct* is the **engine's** scoring job. `shared` only guarantees the accusation is
+> accusation is _correct_ is the **engine's** scoring job. `shared` only guarantees the accusation is
 > well-formed and resolves against the case. No "correct accusation" refinement belongs here.
 
 > **Deferred to engine (deliberate non-goals):** the full deterministic **solvability proof**,
 > **accusation scoring**, runtime **grounding enforcement** over LLM utterances, and any
-> clue→culprit *reachability* refinement (not decidable in `shared` without structuring `ifLeaked`,
-> which we keep as prose per the issue). R14/R16 are *necessary-but-not-sufficient* structural gates.
+> clue→culprit _reachability_ refinement (not decidable in `shared` without structuring `ifLeaked`,
+> which we keep as prose per the issue). R14/R16 are _necessary-but-not-sufficient_ structural gates.
 
 ---
 
@@ -441,13 +472,32 @@ included by **conditional spread** (`...(c.refersTo !== undefined ? { refersTo: 
 never `{ refersTo: undefined }`. [critique-A M1, critique-B F8]
 
 ```ts
-function redactDossier(d) { return { id: d.id, publicPersona: d.publicPersona,
-  knownFacts: d.knownFacts, relationships: d.relationships }; } // OMITS secrets, alibi, knowledge, isGuilty, role
-function redactClue(c)    { return { id: c.id, statement: c.statement,
-  ...(c.refersTo !== undefined ? { refersTo: c.refersTo } : {}) }; }            // OMITS reliability
-function toPublicCaseFile(cf) { return { id: cf.id, victim: cf.victim, weapons: cf.weapons,
-  locations: cf.locations, timeline: cf.timeline,
-  suspects: cf.suspects.map(redactDossier), clues: cf.clues.map(redactClue) }; } // OMITS solution
+function redactDossier(d) {
+  return {
+    id: d.id,
+    publicPersona: d.publicPersona,
+    knownFacts: d.knownFacts,
+    relationships: d.relationships,
+  };
+} // OMITS secrets, alibi, knowledge, isGuilty, role
+function redactClue(c) {
+  return {
+    id: c.id,
+    statement: c.statement,
+    ...(c.refersTo !== undefined ? { refersTo: c.refersTo } : {}),
+  };
+} // OMITS reliability
+function toPublicCaseFile(cf) {
+  return {
+    id: cf.id,
+    victim: cf.victim,
+    weapons: cf.weapons,
+    locations: cf.locations,
+    timeline: cf.timeline,
+    suspects: cf.suspects.map(redactDossier),
+    clues: cf.clues.map(redactClue),
+  };
+} // OMITS solution
 ```
 
 ### 5.2 Guarantees the test-author must pin (`redaction.test.ts`)
@@ -457,7 +507,7 @@ function toPublicCaseFile(cf) { return { id: cf.id, victim: cf.victim, weapons: 
    `killerId`, `doesNotKnow`, `role`, `reliability`, `breaksWhen`, `leakTrigger`, `ifLeaked`, `alibi`.
    (`role` + `reliability` are the C1/C2 leaks critique-A caught — they MUST be here and MUST be
    probed.) This is a **structural key** check, not a value check.
-2. **Allowlist key-set** — assert the *exact* top-level key-set of `PublicCaseFile` is
+2. **Allowlist key-set** — assert the _exact_ top-level key-set of `PublicCaseFile` is
    `{id, victim, weapons, locations, timeline, suspects, clues}`; each `PublicDossier` is exactly
    `{id, publicPersona, knownFacts, relationships}`; each `PublicClue` is `{id, statement}` or
    `{id, statement, refersTo}`. A newly-added sensitive field is caught **unless deliberately
@@ -514,7 +564,7 @@ The **`code` step** writes all `src/*.ts` + scaffold configs and produces
 - **Redaction tests:** all four §5.2 guarantees (denylist scan, allowlist key-set, totality,
   scoped string-content scan).
 - **Type-level checks (`brands.test-d.ts`):** `WeaponId`-where-`LocationId` and
-  `VictimId`-where-`SuspectId` are *compile* errors — `// @ts-expect-error` + `expectTypeOf`. These
+  `VictimId`-where-`SuspectId` are _compile_ errors — `// @ts-expect-error` + `expectTypeOf`. These
   don't count toward runtime coverage but guard the brand design (incl. the F4 victim/suspect split).
 
 ### 6.3 Mechanism #2 — mutation-probe every test (`mutation-ledger.md`)
@@ -547,7 +597,7 @@ the threshold, never add a Stryker exclusion or `/* c8 ignore */`/`.skip` to pas
 `shared` has **no LLM call site, no prompt, no DB, no network**. Therefore **no recorded-fixture
 replay, no FAIL→PASS evals, no wire payload-scan** belong in this package — the test-author must not
 hallucinate them (doing so = a vacuous, non-load-bearing test the adversary flags). The only analogue
-that *does* belong is the structural redaction key-scan (§5.2).
+that _does_ belong is the structural redaction key-scan (§5.2).
 
 ### 6.5 Mechanism #3 — standing adversary
 
@@ -555,7 +605,7 @@ After review, the adversary argues against the suite, specifically checking: (a)
 asserts the **specific code**, not bare failure; (b) the denylist scan actually catches a leaked
 field — `role` and `reliability` included and probed; (c) the allowlist scan is also probed; (d) no
 `.skip`/coverage-ignore/lowered threshold; (e) no "correct accusation" or LLM eval smuggled in; (f)
-each fail fixture is *one* mutation from valid (a double-invalid fixture can pass R-x's test while R-x
+each fail fixture is _one_ mutation from valid (a double-invalid fixture can pass R-x's test while R-x
 is broken). BLOCK on any CRITICAL.
 
 ---
@@ -583,7 +633,7 @@ depends on.
   `typecheck` (`tsc --noEmit`), `lint` (`eslint . --max-warnings 0`), `test` (`vitest run --coverage`),
   `test:mutation` (`stryker run`).
 - **`vitest.config.ts`** — `coverage.provider='v8'`, `thresholds {lines:100, branches:100,
-  functions:100, statements:100}`, `coverage.include=['src/**']` (do **not** exclude `index.ts`/
+functions:100, statements:100}`, `coverage.include=['src/**']` (do **not** exclude `index.ts`/
   `enums.ts` to dodge — they're hit transitively). **`stryker.conf.json`** — vitest runner, mutate
   `src/**`, ignore `*.test.ts`/`tests/`, `thresholds.break: 100`.
 - **CI note [critique-A N5 / critique-B F8].** `.github/workflows/ci.yml` runs `format:check`,
@@ -620,13 +670,13 @@ Pipeline after handoff: `test_author` (all tests + ledger) → `format → lint 
 
 ## 10. Risks, non-goals, sequencing
 
-- **Non-goals (engine, not shared):** accusation *scoring/solving*, case *generation*, runtime
+- **Non-goals (engine, not shared):** accusation _scoring/solving_, case _generation_, runtime
   grounding enforcement over LLM utterances, the full deterministic solvability proof, prompt
-  templates. R14/R16 are *necessary-but-not-sufficient* structural gates only.
+  templates. R14/R16 are _necessary-but-not-sufficient_ structural gates only.
 - **Risk — Zod-4 refinement API drift.** `.superRefine` vs `.check`/`z.core` differs by minor.
   Mitigation: Step 0 pins the version; all refinements isolated in `refinements.ts`.
 - **Risk — branch unreachability.** If a refinement helper has a branch no fixture can hit, the 100%
-  gate fails *by design* — fix the design (remove the dead branch), never an ignore comment. The
+  gate fails _by design_ — fix the design (remove the dead branch), never an ignore comment. The
   all-kinds Trigger fixture (§6.2) keeps positive Trigger branches reachable.
 - **Risk — projection drift.** A future sensitive field added to `Dossier`/`Clue` but not to the
   redaction denylist could leak. Mitigation: the **allowlist key-set** assertion (§5.2 item 2) is the
@@ -635,4 +685,7 @@ Pipeline after handoff: `test_author` (all tests + ledger) → `format → lint 
   must let `relationships[].to` resolve against `suspects[].id ∪ {victim.id}` in R10a. Verified by the
   R10a pass/fail fixtures and a `brands.test-d.ts` assertion that a `WeaponId` is not assignable to
   `PersonId`.
+
+```
+
 ```

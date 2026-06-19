@@ -91,7 +91,7 @@
     "code": {
       "type": "ai",
       "description": "Implement PRODUCTION code only — no tests, no evals",
-      "skill": "skills/code.md",
+      "skill": "${PRESET_DIR}/skills/code.md",
       "timeout": 5400,
       "evidence": [
         { "rule": "file_exists", "file_glob": "coverage-handoff.md", "min_file_size": 10 }
@@ -100,7 +100,7 @@
     "test_author": {
       "type": "ai",
       "description": "Separate author writes ALL tests + evals to 100% and mutation-probes each",
-      "skill": "skills/test-author.md",
+      "skill": "${PRESET_DIR}/skills/test-author.md",
       "timeout": 5400,
       "evidence": [
         { "rule": "file_exists", "file_glob": "mutation-ledger.md", "min_file_size": 10 }
@@ -199,7 +199,7 @@
     "code_review": {
       "type": "ai",
       "description": "Review for correctness, the grounding invariant, and test honesty",
-      "skill": "skills/code-review.md",
+      "skill": "${PRESET_DIR}/skills/code-review.md",
       "subagent_type": "general-purpose",
       "two_phase": true,
       "timeout": 900,
@@ -210,7 +210,7 @@
     "adversary": {
       "type": "ai",
       "description": "Standing adversarial gate — argue AGAINST the change; hunt vacuous tests, silent inversions, leaked ground truth",
-      "skill": "skills/adversary.md",
+      "skill": "${PRESET_DIR}/skills/adversary.md",
       "subagent_type": "general-purpose",
       "two_phase": true,
       "timeout": 900,
@@ -225,7 +225,7 @@
     "create_pr": {
       "type": "ai",
       "description": "Open a pull request",
-      "skill": "skills/create-pr.md",
+      "skill": "${PRESET_DIR}/skills/create-pr.md",
       "timeout": 300,
       "evidence": [{ "rule": "file_exists", "file_glob": "pr-url.txt", "min_file_size": 5 }]
     }
