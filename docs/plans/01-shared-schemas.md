@@ -19,7 +19,7 @@ Every graft and every rejection is called out so the delta is auditable.
 
 | Source | Adopted | Why |
 |--------|---------|-----|
-| **A (spine)** | Stable `CaseIssueCode` enum per refinement | Directly serves `code.md`/`test-author.md`: tests assert the *specific* code, not bare `success===false` — this is what kills code-swap mutants. Highest-value testing affordance in either design. |
+| **A (spine)** | Stable `CaseIssueCode` enum per refinement | Directly serves the quality bar (`references/code-quality.md`): tests assert the *specific* code, not bare `success===false` — this is what kills code-swap mutants. Highest-value testing affordance in either design. |
 | **A** | Separate `VictimId` / `SuspectId` brands | Already resolves critique-B's **F4** at compile time: `Accusation.accusedSuspectId: SuspectId` structurally cannot hold a `VictimId` → "victim can't be accused" is a *type* guarantee, not a runtime hope. |
 | **A** | `victim` as a single declared object + `weapons[]`/`locations[]`/`timeline[]`/`suspects[]`/`clues[]` catalogs; integrity at `CaseFile.superRefine` | Cleanest "finite evidentiary core." `suspects[]` **are** the dossiers → no separate cast registry → the dossier↔suspect bijection critique-B's **F2** wanted is structural, not a refinement. |
 | **A** | Free-string facts in `knownFacts`/`knows`/`doesNotKnow`/`secret.fact`/`alibi.truth`; `ifLeaked` as prose | Keeps the headline **redaction** clean (no shared fact catalog that could leak secret-fact *statements* to the client). Honors the issue's literal field shapes. |
@@ -317,8 +317,8 @@ export function validateAccusation(cf: CaseFile, acc: Accusation): AccusationVal
 
 ## 3. Deliverable 3 — exact file list under `packages/shared`
 
-> **Ownership (per `code.md` + `skills/code.md`):** the **coder** writes all `src/*.ts` production
-> + `package.json`/`tsconfig*`/`eslint.config.js` scaffold + `coverage-handoff.md`, and writes
+> **Ownership (architect-whodunit's coder≠test-author split):** the **coder** (`wd-feature-coder`) writes all `src/*.ts` production
+> + `package.json`/`tsconfig*`/`eslint.config.js` scaffold + `code-checklist.json`, and writes
 > **zero tests**. The **test_author** owns every `*.test.ts`/`*.test-d.ts`, the `tests/` tree, the
 > **threshold-bearing configs** (`vitest.config.ts`, `stryker.conf.json`), and `mutation-ledger.md`.
 
@@ -362,7 +362,7 @@ packages/shared/
 ```
 
 `index.ts` and `enums.ts` are pure re-exports/enums — covered transitively; no dedicated branch logic.
-Session-dir artifacts: `coverage-handoff.md` (coder), `mutation-ledger.md` (test_author).
+Session artifacts under `{session}`: `code-checklist.json` (coder), `mutation-ledger.md` (test_author).
 
 ---
 
@@ -372,7 +372,7 @@ All live in `refinements.ts:checkCaseInvariants`, attached via `CaseFile.superRe
 Zod issue carrying a stable `CaseIssueCode` (in `errors.ts`). Each row is a **coverage obligation**
 (pass-arm silent + fail-arm fires) **and** a **mutation-probe target**.
 
-**Branch-structuring rule (`code.md`: "an unreachable line means the design is wrong").** Every
+**Branch-structuring rule (the quality bar: "an unreachable line means the design is wrong").** Every
 helper is written *collect violations → if (any) ctx.addIssue* so both arms are reachable. Compound
 checks (R5, R6, R10, R13) are **data-driven loops** so the all-present/pass arm and each
 one-missing/fail arm are independently reachable. No defensive guards over values Zod already narrowed.
@@ -471,17 +471,17 @@ function toPublicCaseFile(cf) { return { id: cf.id, victim: cf.victim, weapons: 
    critique-B's **F1** false-positive entirely.)
 
 > **Enforcement boundary.** The real wire payload-scan (SSE/tRPC) lives in `apps/api` contract tests
-> per `code.md`. `shared` provides the projection types, the redaction functions, and the structural
+> per the quality bar. `shared` provides the projection types, the redaction functions, and the structural
 > guarantees above. The test-author must **not** attempt a network payload-scan in this pure-TS package.
 
 ---
 
-## 6. 100%-coverage test strategy (honoring `code.md` + `test-author.md`)
+## 6. 100%-coverage test strategy (honoring the quality bar + the coder≠test-author split)
 
 ### 6.1 Mechanism #1 — coder ≠ test-author split
 
 The **`code` step** writes all `src/*.ts` + scaffold configs and produces
-`{{SESSION_DIR}}/coverage-handoff.md`: one row per function / branch / exit path. The coder writes
+`{session}/code-checklist.json`: one row per function / branch / exit path. The coder writes
 **NO tests** and records anything plan-mentioned-as-test as an obligation. Example rows:
 
 ```
@@ -540,7 +540,7 @@ schema logic has no excusable survivors. Expected mutants: boolean flips (`===`/
 array-method swaps (`.some`/`.every`), the count check (`===1`/`>=1`), removed `addIssue` calls, and
 `CaseIssueCode` string-literal mutations. Each must be killed by a targeted assertion. **Never lower
 the threshold, never add a Stryker exclusion or `/* c8 ignore */`/`.skip` to pass** (CRITICAL per
-`code.md` + adversary skill).
+the quality bar + `wd-adversary`).
 
 ### 6.4 No LLM evals here (explicit non-obligation)
 
@@ -611,10 +611,9 @@ depends on.
 7. `tests/fixtures/validCase.ts` is **coder-authored as a production helper** only if reused by
    `src` — otherwise it is test_author-owned. (Decision: keep the valid-case builder under
    `tests/fixtures/` owned by **test_author**, so the coder ships zero test-coupled code.)
-8. Write `coverage-handoff.md`. Run `pnpm format && lint && typecheck`. Hand off to test_author.
+8. Write `code-checklist.json`. Run `pnpm format && lint && typecheck`. Hand off to the test-author.
 
-Pipeline after handoff: `test_author` (all tests + ledger) → `format → lint → typecheck → test (100%)
-→ mutation (break 100) → code_review → adversary → report → create_pr`.
+Pipeline after handoff (the `/archwd` feature back-half): test-author (all tests + ledger) → format → lint → typecheck → test (100%) → mutation (break 100) → `wd-code-reviewer` → `wd-adversary` → `wd-ship` (PR).
 
 ---
 
