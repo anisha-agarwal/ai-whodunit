@@ -103,9 +103,9 @@ erDiagram
 
     PUBLIC_CASE_FILE ||--|{ PUBLIC_DOSSIER : "redacted suspects"
     PUBLIC_CASE_FILE ||--o{ PUBLIC_CLUE    : "redacted clues"
-    CASE_FILE ..|> PUBLIC_CASE_FILE : "toPublicCaseFile() — drops solution; redacts role/secrets/alibi/knowledge/isGuilty/reliability"
-    DOSSIER   ..|> PUBLIC_DOSSIER  : "redactDossier() — omits secrets, alibi, knowledge, isGuilty, role"
-    CLUE      ..|> PUBLIC_CLUE     : "redactClue() — omits reliability"
+    CASE_FILE ||--|| PUBLIC_CASE_FILE : "toPublicCaseFile() drops solution, redacts role/secrets/alibi/knowledge/isGuilty/reliability"
+    DOSSIER   ||--|| PUBLIC_DOSSIER  : "redactDossier() omits secrets/alibi/knowledge/isGuilty/role"
+    CLUE      ||--|| PUBLIC_CLUE     : "redactClue() omits reliability"
 ```
 
 ### 1.2 Data-flow (who validates, who redacts, who sees what)
