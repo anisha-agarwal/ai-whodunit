@@ -18,7 +18,6 @@ A portfolio piece demonstrating real AI/LLM product engineering: grounded genera
 | `apps/api`            | tRPC + SSE. Server-authoritative; only place ground truth, secrets, and Anthropic keys live.      |
 | `apps/web`            | Next.js / Vercel.                                                                                 |
 | `apps/mobile`         | Expo / React Native (later).                                                                      |
-| `presets/ai-whodunit` | [forge](https://github.com/elitecoder/forge) preset encoding the evidence-gated build pipeline.   |
 
 ## Models (tiered Claude)
 
@@ -31,7 +30,7 @@ The **solver is deterministic code**, not an LLM.
 
 ## Quality bar (non-negotiable)
 
-100% line+branch coverage on deterministic code; real-DB integration tests (never mocked); full Playwright e2e + visual baselines; LLM call sites covered by recorded-fixture replay + threshold eval suite. **No hallucinating tests** — every test exercises the real implementation. See `presets/ai-whodunit/references/code.md`.
+100% line+branch coverage on deterministic code; real-DB integration tests (never mocked); full Playwright e2e + visual baselines; LLM call sites covered by recorded-fixture replay + threshold eval suite. **No hallucinating tests** — every test exercises the real implementation. See the [architect-whodunit](https://github.com/anisha-agarwal/architect-whodunit) build pipeline.
 
 ## Develop
 
@@ -40,4 +39,4 @@ pnpm install
 pnpm lint && pnpm typecheck && pnpm test
 ```
 
-Built feature-by-feature with `forge plan "<feature>"` → `forge drive --preset ./presets/ai-whodunit`.
+Built feature-by-feature with [architect-whodunit](https://github.com/anisha-agarwal/architect-whodunit): `/archwd "<feature>"`.

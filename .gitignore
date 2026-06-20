@@ -16,9 +16,8 @@ playwright-report/
 test-results/
 *-snapshots/__diff_output__/
 
-# forge run state
-.forge/
-forge-runs/
+# architect-whodunit run state
+.worktrees/
 
 # os / editor
 .DS_Store
