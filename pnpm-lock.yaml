@@ -20,6 +20,40 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
+  packages/engine:
+    dependencies:
+      '@ai-whodunit/shared':
+        specifier: workspace:*
+        version: link:../shared
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@eslint/js':
+        specifier: ^10.0.1
+        version: 10.0.1(eslint@10.5.0)
+      '@stryker-mutator/core':
+        specifier: ^9.6.1
+        version: 9.6.1(@types/node@22.19.21)
+      '@stryker-mutator/vitest-runner':
+        specifier: ^9.6.1
+        version: 9.6.1(@stryker-mutator/core@9.6.1(@types/node@22.19.21))(vitest@4.1.9)
+      '@vitest/coverage-v8':
+        specifier: ^4.1.9
+        version: 4.1.9(vitest@4.1.9)
+      eslint:
+        specifier: ^10.5.0
+        version: 10.5.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.61.1
+        version: 8.61.1(eslint@10.5.0)(typescript@5.9.3)
+      vitest:
+        specifier: ^4.1.9
+        version: 4.1.9(@types/node@22.19.21)(@vitest/coverage-v8@4.1.9)(vite@8.0.16(@types/node@22.19.21))
+
   packages/shared:
     dependencies:
       zod:
