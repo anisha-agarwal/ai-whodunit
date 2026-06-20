@@ -330,7 +330,7 @@ packages/shared/
 ├── eslint.config.js             # coder — flat config (typescript-eslint), clean at --max-warnings 0
 ├── vitest.config.ts             # TEST_AUTHOR — coverage v8, thresholds line=100 branch=100 func=100 stmt=100
 ├── stryker.conf.json            # TEST_AUTHOR — vitest runner; thresholds.break: 100
-├── README.md                    # coder — what shared owns; the projection contract; CI-vs-forge mutation note
+├── README.md                    # coder — what shared owns; the projection contract; CI-vs-architect mutation note
 └── src/
     ├── index.ts                 # coder — barrel: schemas, types, redaction fns, validateAccusation, CaseIssueCode
     ├── ids.ts                   # coder — branded id schemas (incl. PersonId union) + inferred types
@@ -588,8 +588,8 @@ depends on.
   `src/**`, ignore `*.test.ts`/`tests/`, `thresholds.break: 100`.
 - **CI note [critique-A N5 / critique-B F8].** `.github/workflows/ci.yml` runs `format:check`,
   `lint`, `typecheck`, `test` — it does **not** invoke `test:mutation`. The Stryker break gate runs
-  only in the forge pipeline (Stryker is slow/expensive for every push). Document this in the README
-  and `stryker.conf.json` so contributors know mutation coverage is enforced at forge/PR-review level.
+  only in the architect pipeline (Stryker is slow/expensive for every push). Document this in the README
+  and `stryker.conf.json` so contributors know mutation coverage is enforced at architect/PR-review level.
   Adding the `lint` script here is what first makes `pnpm lint` (= `turbo run lint`) real — ensure the
   flat eslint config is warning-clean from the start.
 
