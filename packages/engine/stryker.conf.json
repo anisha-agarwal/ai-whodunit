@@ -5,7 +5,13 @@
   "plugins": ["@stryker-mutator/vitest-runner"],
   "reporters": ["progress", "clear-text"],
   "coverageAnalysis": "perTest",
-  "mutate": ["src/**/*.ts", "!src/**/*.test.ts", "!src/**/*.test-d.ts", "!src/index.ts"],
+  "mutate": [
+    "src/**/*.ts",
+    "!src/**/*.test.ts",
+    "!src/**/*.test-d.ts",
+    "!src/index.ts",
+    "!src/**/bin.ts"
+  ],
   "thresholds": {
     "high": 100,
     "low": 100,

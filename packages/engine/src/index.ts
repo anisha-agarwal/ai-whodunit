@@ -43,3 +43,11 @@ export type {
   IssueCode,
 } from './generate/types.js';
 export type { GenerateFn, StoreFn } from './generate/ports.js';
+
+// The generate-N CLI library (pure) — drives `generateCase` N times and emits a codes+numbers-only
+// `GenerateReport`. The Node entry shim (`cli/bin.ts`) is NOT re-exported (it is a process boundary).
+export { generateN, aggregateSolvability } from './cli/generate-n.js';
+export { parseGenerateArgs } from './cli/args.js';
+export type { GenerateNOptions } from './cli/generate-n.js';
+export type { GenerateReport, CaseOutcome } from './cli/types.js';
+export type { ParsedArgs } from './cli/args.js';
