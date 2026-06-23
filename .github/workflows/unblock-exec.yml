@@ -1,0 +1,77 @@
+name: Unblock Exec on Plan PR merge
+
+# When a Plan PR (one that lands a docs/plans/**.md file) is MERGED, automatically
+# unblock its paired [Exec] issue by removing the `blocked` label.
+#
+# Why merge — not issue-close: an Exec issue is only truly runnable once the plan
+# doc exists on the base branch (the execution worktree forks off it). Keying off
+# the plan PR merge guarantees the file is on `main` at the moment we unblock.
+#
+# Pairing convention (written by the archwd plan flow):
+#   - The plan PR body and/or the plan doc contains a line:  "Unblocks #<N>"
+#     (also matches "Unblocks: #<N>").
+#   - The paired Exec issue #<N> carries the `blocked` label until the plan lands.
+
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - 'docs/plans/**'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  unblock:
+    runs-on: ubuntu-latest
+    # Only act when the plan PR actually MERGED (not merely closed).
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Check out the base branch (plan doc is now on it)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Unblock the paired Exec issue(s)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+
+          # Build the text to scan: the PR body + every changed docs/plans/**.md file.
+          SCAN_FILE="$(mktemp)"
+          printf '%s\n' "${PR_BODY:-}" > "$SCAN_FILE"
+
+          mapfile -t PLAN_FILES < <(
+            gh pr view "$PR_NUMBER" --repo "$REPO" --json files --jq '.files[].path' \
+              | grep -E '^docs/plans/.*\.md$' || true
+          )
+          for f in "${PLAN_FILES[@]:-}"; do
+            [ -n "$f" ] && [ -f "$f" ] && cat "$f" >> "$SCAN_FILE"
+          done
+
+          # Extract every "Unblocks #N" / "Unblocks: #N" reference, de-duplicated.
+          EXECS="$(grep -oiE 'unblocks:?[[:space:]]*#[0-9]+' "$SCAN_FILE" \
+                    | grep -oE '[0-9]+' | sort -u || true)"
+          if [ -z "${EXECS:-}" ]; then
+            echo "No 'Unblocks #N' reference in PR #$PR_NUMBER body or changed plan docs — nothing to unblock."
+            exit 0
+          fi
+
+          for EXEC in $EXECS; do
+            echo "Plan PR #$PR_NUMBER merged → paired Exec issue #$EXEC"
+            # Idempotent: only edit if the Exec issue still carries `blocked`.
+            if gh issue view "$EXEC" --repo "$REPO" --json labels --jq '.labels[].name' | grep -qx 'blocked'; then
+              gh issue edit "$EXEC" --repo "$REPO" --remove-label blocked
+              gh issue comment "$EXEC" --repo "$REPO" \
+                --body "🔓 Auto-unblocked: plan PR #$PR_NUMBER merged — the plan doc is now on \`$BASE_REF\`. Ready to execute."
+              echo "Removed 'blocked' from #$EXEC and commented."
+            else
+              echo "Exec #$EXEC has no 'blocked' label — already unblocked; nothing to do."
+            fi
+          done
