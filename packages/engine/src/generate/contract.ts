@@ -14,9 +14,7 @@ import type { IssueCode } from './types.js';
  * `isGuilty`); `generateCase` re-`safeParse`s the result, so this schema is the model's contract,
  * not the engine's trust boundary.
  */
-export const caseGenerationFormat: Record<string, unknown> = z.toJSONSchema(CaseFile, {
-  target: 'draft-2020-12',
-});
+export const caseGenerationFormat: Record<string, unknown> = z.toJSONSchema(CaseFile);
 
 /**
  * The system prompt handed to Opus 4.8 alongside `caseGenerationFormat`. Names the closed-world /

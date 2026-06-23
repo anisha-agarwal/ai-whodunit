@@ -48,7 +48,6 @@ export async function generateCase(
   let sawParse = false; // some attempt passed `CaseFile.safeParse`
   let sawParseFail = false; // some attempt RAN `safeParse` and it FAILED
   let sawSolvable = false; // some attempt's verdict was `solvable`
-  let sawReject = false; // some attempt's `GenerateFn` rejected (no `safeParse` ran for it)
 
   let lastIssues: readonly IssueCode[] = [];
   let attempts = 0;
@@ -66,8 +65,9 @@ export async function generateCase(
         priorIssues,
       });
     } catch {
-      // Reject is RECOVERABLE — record the sentinel, keep looping. No throw escapes.
-      sawReject = true;
+      // Reject is RECOVERABLE — record the sentinel, keep looping. No throw escapes. Reject is the
+      // LOWEST-priority signal: it leaves `lastIssues` carrying the sentinel but sets NONE of the
+      // parse/solve history flags, so any later real parse/solve signal outranks it in the selector.
       lastIssues = [GENERATE_FN_REJECTED];
       continue;
     }
@@ -97,23 +97,30 @@ export async function generateCase(
 
   return {
     ok: false,
-    reason: selectExhaustionReason({ sawParse, sawParseFail, sawSolvable, sawReject }),
+    reason: selectExhaustionReason({ sawParse, sawParseFail, sawSolvable }),
     attempts,
     lastIssues,
   };
 }
 
 /**
- * Pick the exhaustion terminal by priority ladder over the accumulated history. A real solve/parse
- * signal always outranks the transport reject — the `sawReject` branch is checked LAST. Reachable
- * only after ≥1 attempt ran (the `maxAttempts < 1` guard owns the no-attempt terminal), so at least
- * one flag is set; the four reasons partition every reachable exhaustion history.
+ * Pick the exhaustion terminal by priority ladder over the accumulated parse/solve history. A real
+ * solve/parse signal always outranks the transport reject — so the three parse/solve flags are
+ * checked first (highest to lowest real-signal priority) and the transport-reject terminal is the
+ * LOWEST-priority bottom (returned only when NO parse/solve signal was ever recorded across the
+ * run). Reachable only after ≥1 attempt ran (the `maxAttempts < 1` guard owns the no-attempt
+ * terminal); when none of the three parse/solve flags is set, every attempt rejected, so the sole
+ * remaining signal is the transport reject.
+ *
+ * `sawReject` is intentionally NOT tracked as a flag: it would be dead state. The transport reject
+ * sets NONE of the three parse/solve flags, so "no parse/solve flag set after ≥1 attempt" IS the
+ * reject terminal — deriving it from the absence of the other flags (rather than a parallel boolean
+ * the selector reads only on an unreachable false-branch) keeps every branch here load-bearing.
  */
 function selectExhaustionReason(flags: {
   sawParse: boolean;
   sawParseFail: boolean;
   sawSolvable: boolean;
-  sawReject: boolean;
 }): GenerationFailureReason {
   if (flags.sawSolvable) {
     // Some attempt was solvable but none also consistent.
@@ -127,6 +134,7 @@ function selectExhaustionReason(flags: {
     // ≥1 attempt RAN `safeParse` and none passed — a real malformed case.
     return GenerationFailureReason.PARSE_NEVER_VALID;
   }
-  // Reject was the SOLE signal — no attempt ever produced a real parse/solve result to judge.
+  // No parse/solve signal ever recorded ⇒ every attempt rejected — reject was the SOLE signal.
+  // Checked LAST (lowest priority): any real parse/solve signal above outranks "the LLM call failed".
   return GenerationFailureReason.GENERATE_FN_REJECTED;
 }
