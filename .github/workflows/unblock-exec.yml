@@ -1,0 +1,53 @@
+name: Unblock Exec on Plan close
+
+# When a [Plan] issue (label `plan`) is closed as completed, automatically
+# unblock its paired [Exec] issue by removing the `blocked` label.
+#
+# Pairing convention (see docs/plans/ + the issue templates):
+#   - A Plan issue body contains a line:  "Unblocks #<N>"
+#   - The paired Exec issue #<N> carries the `blocked` label until the plan is done.
+#
+# This fires only when the plan is closed as *completed* (state_reason == completed),
+# so closing a plan as "not planned" / won't-do does NOT unblock the Exec issue.
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  unblock:
+    runs-on: ubuntu-latest
+    # Only act on a `plan`-labeled issue that was closed as completed.
+    if: >-
+      github.event.issue.state_reason == 'completed' &&
+      contains(github.event.issue.labels.*.name, 'plan')
+    steps:
+      - name: Unblock the paired Exec issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PLAN_NUMBER: ${{ github.event.issue.number }}
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          set -euo pipefail
+
+          # Parse "Unblocks #<N>" (case-insensitive) from the plan issue body.
+          EXEC="$(printf '%s' "$BODY" | grep -oiE 'Unblocks #[0-9]+' | head -1 | grep -oE '[0-9]+' || true)"
+          if [ -z "${EXEC:-}" ]; then
+            echo "Plan #$PLAN_NUMBER has no 'Unblocks #N' line in its body — nothing to unblock."
+            exit 0
+          fi
+          echo "Plan #$PLAN_NUMBER closed as completed → paired Exec issue #$EXEC"
+
+          # Idempotent: only edit if the Exec issue still carries `blocked`.
+          if gh issue view "$EXEC" --repo "$REPO" --json labels --jq '.labels[].name' | grep -qx 'blocked'; then
+            gh issue edit "$EXEC" --repo "$REPO" --remove-label blocked
+            gh issue comment "$EXEC" --repo "$REPO" \
+              --body "🔓 Auto-unblocked: paired plan issue #$PLAN_NUMBER was closed as completed. Ready to execute."
+            echo "Removed 'blocked' from #$EXEC and commented."
+          else
+            echo "Exec #$EXEC has no 'blocked' label — already unblocked; nothing to do."
+          fi
