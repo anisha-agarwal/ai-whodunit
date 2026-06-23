@@ -1,15 +1,21 @@
 name: Unblock Exec on Plan PR merge
 
 # When a Plan PR (one that lands a docs/plans/**.md file) is MERGED, automatically
-# unblock its paired [Exec] issue by removing the `blocked` label.
+# prepare its paired [Exec] issue for execution by:
+#   1. removing the `blocked` label, and
+#   2. writing an "Approved plan: docs/plans/<file>.md" line into the issue body.
+#
+# Both are required: /archwd reads the `Approved plan:` line FROM THE ISSUE BODY to
+# resolve --plan, so removing the label alone leaves `/archwd #N` unable to find the
+# plan. (A comment is not enough — archwd parses the body, not comments.)
 #
 # Why merge — not issue-close: an Exec issue is only truly runnable once the plan
 # doc exists on the base branch (the execution worktree forks off it). Keying off
 # the plan PR merge guarantees the file is on `main` at the moment we unblock.
 #
 # Pairing convention (written by the archwd plan flow):
-#   - The plan PR body and/or the plan doc contains a line:  "Unblocks #<N>"
-#     (also matches "Unblocks: #<N>").
+#   - The plan doc and/or the plan PR body contains a line:  "Unblocks #<N>"
+#     (markdown-tolerant: also matches "**Unblocks:** #<N>").
 #   - The paired Exec issue #<N> carries the `blocked` label until the plan lands.
 
 on:
@@ -33,7 +39,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.base.ref }}
 
-      - name: Unblock the paired Exec issue(s)
+      - name: Unblock + record the approved plan on the paired Exec issue(s)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
@@ -43,35 +49,71 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Build the text to scan: the PR body + every changed docs/plans/**.md file.
-          SCAN_FILE="$(mktemp)"
-          printf '%s\n' "${PR_BODY:-}" > "$SCAN_FILE"
+          # Markdown-tolerant "Unblocks #N" extractor (handles "**Unblocks:** #20").
+          extract_execs() { grep -oiE 'unblocks[^#]{0,8}#[0-9]+' | grep -oE '[0-9]+' | sort -u || true; }
 
+          # The docs/plans/**.md files this PR changed.
           mapfile -t PLAN_FILES < <(
             gh pr view "$PR_NUMBER" --repo "$REPO" --json files --jq '.files[].path' \
               | grep -E '^docs/plans/.*\.md$' || true
           )
+
+          # Map each Exec issue -> the plan doc path that unblocks it.
+          declare -A PLAN_FOR
+
+          # Primary: per-file pairing — each plan doc names the exec(s) it unblocks.
           for f in "${PLAN_FILES[@]:-}"; do
-            [ -n "$f" ] && [ -f "$f" ] && cat "$f" >> "$SCAN_FILE"
+            [ -n "$f" ] && [ -f "$f" ] || continue
+            for n in $(extract_execs < "$f"); do PLAN_FOR[$n]="$f"; done
           done
 
-          # Extract every "Unblocks #N" / "Unblocks: #N" reference, de-duplicated.
-          EXECS="$(grep -oiE 'unblocks:?[[:space:]]*#[0-9]+' "$SCAN_FILE" \
-                    | grep -oE '[0-9]+' | sort -u || true)"
-          if [ -z "${EXECS:-}" ]; then
-            echo "No 'Unblocks #N' reference in PR #$PR_NUMBER body or changed plan docs — nothing to unblock."
+          # Fallback: execs named only in the PR body — pair with the sole plan file
+          # if there is exactly one (otherwise the path is ambiguous; still unblock,
+          # but skip writing a definite Approved-plan line).
+          for n in $(printf '%s' "${PR_BODY:-}" | extract_execs); do
+            if [ -z "${PLAN_FOR[$n]:-}" ]; then
+              if [ "${#PLAN_FILES[@]}" -eq 1 ]; then PLAN_FOR[$n]="${PLAN_FILES[0]}"; else PLAN_FOR[$n]=""; fi
+            fi
+          done
+
+          if [ "${#PLAN_FOR[@]}" -eq 0 ]; then
+            echo "No 'Unblocks #N' reference in PR #$PR_NUMBER body or changed plan docs — nothing to do."
             exit 0
           fi
 
-          for EXEC in $EXECS; do
-            echo "Plan PR #$PR_NUMBER merged → paired Exec issue #$EXEC"
-            # Idempotent: only edit if the Exec issue still carries `blocked`.
+          for EXEC in "${!PLAN_FOR[@]}"; do
+            PLAN_PATH="${PLAN_FOR[$EXEC]}"
+            echo "Plan PR #$PR_NUMBER merged → Exec #$EXEC (plan: ${PLAN_PATH:-<ambiguous, body line skipped>})"
+            CHANGED=0
+
+            # 1) Remove the `blocked` label (idempotent).
             if gh issue view "$EXEC" --repo "$REPO" --json labels --jq '.labels[].name' | grep -qx 'blocked'; then
               gh issue edit "$EXEC" --repo "$REPO" --remove-label blocked
+              echo "  removed 'blocked'"
+              CHANGED=1
+            fi
+
+            # 2) Ensure the body carries "Approved plan: <path>" (idempotent).
+            if [ -n "$PLAN_PATH" ]; then
+              CUR_BODY="$(gh issue view "$EXEC" --repo "$REPO" --json body --jq .body)"
+              if printf '%s' "$CUR_BODY" | grep -qxiE "Approved plan:[[:space:]]*$PLAN_PATH"; then
+                echo "  body already names the approved plan"
+              else
+                # Drop any stale 'Approved plan:' line, then prepend the fresh one.
+                REST="$(printf '%s' "$CUR_BODY" | grep -viE '^Approved plan:' || true)"
+                BODY_FILE="$(mktemp)"
+                printf 'Approved plan: %s\n\n%s' "$PLAN_PATH" "$REST" > "$BODY_FILE"
+                gh issue edit "$EXEC" --repo "$REPO" --body-file "$BODY_FILE"
+                echo "  wrote 'Approved plan: $PLAN_PATH' into the body"
+                CHANGED=1
+              fi
+            fi
+
+            # 3) Comment once, only when this run actually changed something.
+            if [ "$CHANGED" -eq 1 ]; then
               gh issue comment "$EXEC" --repo "$REPO" \
-                --body "🔓 Auto-unblocked: plan PR #$PR_NUMBER merged — the plan doc is now on \`$BASE_REF\`. Ready to execute."
-              echo "Removed 'blocked' from #$EXEC and commented."
+                --body "🔓 Auto-unblocked: plan PR #$PR_NUMBER merged${PLAN_PATH:+ — approved plan \`$PLAN_PATH\` is now on \`$BASE_REF\`}. Run \`/archwd #$EXEC\` to execute."
             else
-              echo "Exec #$EXEC has no 'blocked' label — already unblocked; nothing to do."
+              echo "  no change (already unblocked + recorded); skipping comment"
             fi
           done
