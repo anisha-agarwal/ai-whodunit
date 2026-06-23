@@ -19,4 +19,20 @@ describe('@ai-whodunit/engine barrel', () => {
   it('re-exports the SolverIssueCode const-object', () => {
     expect(engine.SolverIssueCode.CASE_FILE_INVALID).toBe('CASE_FILE_INVALID');
   });
+
+  it('re-exports the case generator surface wired to the real loop', async () => {
+    expect(typeof engine.generateCase).toBe('function');
+    expect(typeof engine.regenerateHint).toBe('function');
+    expect(typeof engine.caseGenerationSystemPrompt).toBe('string');
+    expect(typeof engine.caseGenerationFormat).toBe('object');
+    expect(engine.GenerationFailureReason.NO_ATTEMPTS).toBe('NO_ATTEMPTS');
+    expect(engine.GENERATE_FN_REJECTED).toBe('GENERATE_FN_REJECTED');
+
+    // Wired to the real loop + real safeParse + real solveCase, not a stub.
+    const result = await engine.generateCase(
+      { generate: () => Promise.resolve(solvableCase()) },
+      { maxAttempts: 1 },
+    );
+    expect(result.ok).toBe(true);
+  });
 });
