@@ -73,11 +73,9 @@ export async function generateN(
 
     if (result.ok) {
       accepted += 1;
-      // Accept ⟺ the solver proved solvable ∧ consistent (generateCase's accept predicate), so an
-      // accepted result is a solvable+consistent one — count it as solvable.
-      if (result.verdict.solvable && result.verdict.consistent) {
-        solvable += 1;
-      }
+      // Accept ⟺ the solver proved solvable ∧ consistent (generateCase's accept predicate at
+      // generate.ts:90), so every accepted result is solvable+consistent — count it unconditionally.
+      solvable += 1;
       outcomes.push({
         accepted: true,
         attempts: result.attempts,
