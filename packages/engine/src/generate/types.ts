@@ -57,6 +57,8 @@ export interface GenerationRequest {
   readonly attempt: number;
   /** Stable codes from the previous attempt; `[]` on attempt 1. */
   readonly priorIssues: readonly IssueCode[];
+  /** Optional opaque scenario seed forwarded from GenerateOptions.seed; absent when not supplied. */
+  readonly seed?: string;
 }
 
 /** Loop bounds. `maxAttempts < 1` runs ZERO attempts and returns `NO_ATTEMPTS`. */

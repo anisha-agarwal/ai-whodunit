@@ -32,9 +32,9 @@ function readFlag(argv: readonly string[], flag: string): string | undefined {
   if (index === -1) {
     return undefined;
   }
-  const value = argv[index + 1];
-  // A trailing flag (no following token) reads as absent, not as the empty string.
-  return value === undefined ? undefined : value;
+  // A trailing flag (no following token) reads as `undefined` (absent), not as the empty string —
+  // `argv[index + 1]` is already `string | undefined`, so return it directly.
+  return argv[index + 1];
 }
 
 /**

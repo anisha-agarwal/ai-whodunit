@@ -37,7 +37,7 @@ export async function generateCase(
   deps: GenerationDeps,
   opts: GenerateOptions,
 ): Promise<GenerationResult> {
-  const { maxAttempts } = opts;
+  const { maxAttempts, seed } = opts;
 
   // Zero-attempt guard FIRST — distinct terminal; the `GenerateFn` is never called.
   if (maxAttempts < 1) {
@@ -63,6 +63,9 @@ export async function generateCase(
         format: caseGenerationFormat,
         attempt,
         priorIssues,
+        // Forward the opaque scenario seed only when supplied — `exactOptionalPropertyTypes` rejects an
+        // explicit `seed: undefined` for the optional field, so absent stays truly absent.
+        ...(seed !== undefined ? { seed } : {}),
       });
     } catch {
       // Reject is RECOVERABLE — record the sentinel, keep looping. No throw escapes. Reject is the
