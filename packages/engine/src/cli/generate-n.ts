@@ -60,8 +60,7 @@ export async function generateN(
   deps: GenerationDeps,
   opts: GenerateNOptions,
 ): Promise<GenerateReport> {
-  const { n, maxAttempts, seed } = opts;
-  const generateOpts: GenerateOptions = seed !== undefined ? { maxAttempts, seed } : { maxAttempts };
+  const { n, ...generateOpts } = opts;
 
   const outcomes: CaseOutcome[] = [];
   const failuresByReason = emptyFailuresByReason();
