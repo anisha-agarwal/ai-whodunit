@@ -33,10 +33,7 @@ const ALL_REASONS = Object.values(GenerationFailureReason);
 
 describe('generateN — drives generateCase N times', () => {
   it('returns exactly N CaseOutcomes for an all-accept batch (loop bound)', async () => {
-    const report = await generateN(
-      { generate: acceptBatch(3) },
-      { n: 3, maxAttempts: 1 },
-    );
+    const report = await generateN({ generate: acceptBatch(3) }, { n: 3, maxAttempts: 1 });
 
     // A loop-bound mutant (off-by-one / wrong count) dies on the exact length.
     expect(report.outcomes).toHaveLength(3);

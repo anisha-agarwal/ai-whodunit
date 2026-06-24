@@ -35,10 +35,7 @@ function emptyFailuresByReason(): Record<GenerationFailureReason, number> {
  * `result.ok && result.verdict.solvable && result.verdict.consistent`, so an accepted outcome IS a
  * solvable+consistent one — the solver's own shippable predicate.
  */
-export function aggregateSolvability(
-  outcomes: readonly CaseOutcome[],
-  requested: number,
-): number {
+export function aggregateSolvability(outcomes: readonly CaseOutcome[], requested: number): number {
   if (requested <= 0) {
     return 0;
   }

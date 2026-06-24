@@ -32,7 +32,9 @@ async function main(): Promise<number> {
 
   const depsModulePath = process.env[DEPS_MODULE_ENV];
   if (depsModulePath === undefined || depsModulePath === '') {
-    process.stderr.write(`MISSING_DEPS_MODULE: set ${DEPS_MODULE_ENV} to a GenerationDeps module\n`);
+    process.stderr.write(
+      `MISSING_DEPS_MODULE: set ${DEPS_MODULE_ENV} to a GenerationDeps module\n`,
+    );
     return 2;
   }
 
