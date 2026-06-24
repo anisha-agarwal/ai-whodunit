@@ -35,4 +35,28 @@ describe('@ai-whodunit/engine barrel', () => {
     );
     expect(result.ok).toBe(true);
   });
+
+  it('re-exports the generate-N CLI library wired to the real implementation', async () => {
+    expect(typeof engine.generateN).toBe('function');
+    expect(typeof engine.aggregateSolvability).toBe('function');
+    expect(typeof engine.parseGenerateArgs).toBe('function');
+
+    // parseGenerateArgs wired to the real parser, not a stub.
+    expect(engine.parseGenerateArgs(['--n', '1'])).toEqual({
+      ok: true,
+      args: { n: 1, maxAttempts: 1 },
+    });
+
+    // generateN wired to the real loop → a real, solver-counted report.
+    const report = await engine.generateN(
+      { generate: () => Promise.resolve(solvableCase()) },
+      { n: 1, maxAttempts: 1 },
+    );
+    expect(report.requested).toBe(1);
+    expect(report.accepted).toBe(1);
+    expect(report.solvabilityPct).toBe(100);
+
+    // aggregateSolvability wired to the real counter.
+    expect(engine.aggregateSolvability(report.outcomes, 1)).toBe(100);
+  });
 });

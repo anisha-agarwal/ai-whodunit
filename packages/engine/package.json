@@ -11,6 +11,9 @@
       "default": "./dist/index.js"
     }
   },
+  "bin": {
+    "wd-generate-n": "./dist/cli/bin.js"
+  },
   "files": [
     "dist"
   ],
@@ -19,7 +22,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run --coverage",
-    "test:mutation": "stryker run"
+    "test:mutation": "stryker run",
+    "generate:n": "node ./dist/cli/bin.js"
   },
   "dependencies": {
     "@ai-whodunit/shared": "workspace:*",
